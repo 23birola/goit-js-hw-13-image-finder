@@ -5,7 +5,7 @@ import ImgApiService from './js/apiService'
 const refs = {
     searchForm: document.querySelector('.search-form'),
     gallery: document.querySelector('.gallery'),
-    buttonLoadMore: document.querySelector('.loadMoreButton'),
+    buttonLoadMore: document.querySelector('.load-more-button'),
     buttonSearchImg: document.querySelector('.submit')
 }
 
