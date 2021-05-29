@@ -1,6 +1,9 @@
 import './sass/main.scss';
 import galleryTemplate from './templates/gallery';
 import ImgApiService from './js/apiService'
+import LoadMoreBtn from './js/loadMoreButton';
+import { alert, defaultModules } from '@pnotify/core';
+import * as PNotifyMobile from '@pnotify/mobile';
 
 const refs = {
     searchForm: document.querySelector('.search-form'),
@@ -9,28 +12,47 @@ const refs = {
     buttonSearchImg: document.querySelector('.submit')
 }
 
-// const API_KEY = '21757079-036beeeb18b1a04124bd9f213';
-// const BASE_URL = 'https://pixabay.com/api/?image_type=photo&orientation=horizontal';
-
 const imgApiService = new ImgApiService();
+const loadMoreBtn = new LoadMoreBtn({
+    selector: '[data-action="load-more"]',
+    hidden: true
+});
 
 refs.searchForm.addEventListener('submit', searchImage);
-
-function searchImage(e) {
+defaultModules.set(PNotifyMobile, {});
+async function searchImage(e) {
     e.preventDefault();
+    clearGallery();
+    imgApiService.resetPage();
     imgApiService.query = e.target.elements.query.value;
     if (imgApiService.query === "") {
-        return alert("Что ищем?");
+        refs.buttonLoadMore.classList.add('is-hidden')
+        return alert({ text: "Что ищем?" });
     }
-    console.log(imgApiService.query);
-    imgApiService.fetchImages()
-        .then(data => {
-            console.log(data);
-            console.log(galleryTemplate(data));
-            return appendGalleryMarkup(data);
-        });
+    const images = await imgApiService.fetchImages()
+    appendGalleryMarkup(images);
+    loadMoreBtn.show();
 };
 
 function appendGalleryMarkup(img) {
     refs.gallery.insertAdjacentHTML('beforeend', galleryTemplate(img));
+}
+
+function clearGallery() {
+    refs.gallery.innerHTML = "";
+}
+
+refs.buttonLoadMore.addEventListener('click', loadMoreImg);
+
+async function loadMoreImg(e) {
+    e.preventDefault();
+    loadMoreBtn.disable();
+    const images = await imgApiService.fetchImages();
+    appendGalleryMarkup(images);
+    imgApiService.incrementPage();
+    window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth',
+    })
+    loadMoreBtn.enable();
 }
